@@ -1,0 +1,16 @@
+# Ignore node_modules directory
+/node_modules
+
+# Ignore build directory
+/block/build
+
+# Ignore any local development files or configurations
+*.log
+*.sql
+*.DS_Store
+
+# Ignore environment-specific files
+.env
+
+# Ignore npm package-lock.json file
+package-lock.json

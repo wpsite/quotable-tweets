@@ -3,7 +3,7 @@ Contributor: 99robots, charliepatel, DraftPress
 Donate link:
 Tags: quotable tweet, tweet, tweet button, twitter, tweet ad, tweet cards
 Requires at least: 4.9
-Tested up to: 6.3.1
+Tested up to: 6.5.5
 Stable tag: 1.1.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -30,8 +30,13 @@ Contribute to the plugin and submit pull requests through the [Quotable Tweets p
 
 == Changelog ==
 
-= 1.1.8 = 2023-10-11
-* Made compatible with WordPress 6.3.1
+= 1.1.8 = 2024-07-02
+* Made compatible with WordPress 6.5.5
+* Transitioned the widget into blocks for improved flexibility and usability.
+* Updated theme to align with the rebranding from Twitter to X:
+  * Primary Color: Black (#000000)
+  * Secondary Color: Dark Gray (#333333)
+  * Accent Color: Light Gray (#AAAAAA)
 
 = 1.1.7 = 2021-09-16
 * Made compatible with WordPress 5.8.1
@@ -61,3 +66,23 @@ Contribute to the plugin and submit pull requests through the [Quotable Tweets p
 
 = 1.0.0 =
 * Initial release
+
+== Extending or Upgrading the Plugin ==
+
+If you're a developer looking to extend or upgrade the Quotable Tweets plugin, follow these steps:
+
+### Extending Functionality
+1. **Hooks and Filters**: Utilize WordPress hooks and filters provided by the plugin to modify or extend its functionality. Check out the plugin's source code and documentation for available hooks.
+
+2. **Custom Blocks**: To add new features or modify existing ones, edit the block files (`edit.js`, `save.js`, `index.js`, `style.scss`, `editor.scss`) in the `block` directory. Customize the behavior in `edit.js` and `save.js`, and style changes in `style.scss` and `editor.scss`.
+
+### Upgrading the Plugin
+1. **Updating Dependencies**: If updating npm packages or dependencies, ensure compatibility with existing code and WordPress standards. Update the `package.json` and `package-lock.json` files accordingly.
+
+2. **Building Assets**: After making changes, run `npm install` to update dependencies and `npm run build` to compile assets (`editor.css`, `editor.js`, `style.css`, `index.js`) into the `block/build` directory.
+
+3. **Testing**: Test thoroughly in a local WordPress environment before deploying changes. Check for compatibility with different WordPress versions and configurations.
+
+4. **Documentation**: Update the `readme.txt` file with new features, changes, and instructions for users and developers.
+
+By following these steps, you can effectively extend or upgrade the Quotable Tweets plugin while maintaining compatibility and functionality across various WordPress setups.

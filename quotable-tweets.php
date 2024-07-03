@@ -23,6 +23,8 @@ if ( ! defined( 'WPINC' ) ) {
 	die();
 }
 
+
+
 /**
  * Global Definitions
  */
@@ -71,13 +73,9 @@ add_action(
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
  * @link     https://draftpress.com/products
  * @since    1.0.0
- * @using    WordPress 3.8
+ * @using    WordPress 6.5.5
  */
 class NNRobots_Quotable_Tweets extends WP_Widget {
-
-
-
-
 
 	/**
 	 * Prefix
@@ -168,6 +166,109 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 				),
 			)
 		);
+
+		add_action( 'init', array( $this, 'register_quotable_tweets_block' ) );
+	}
+
+	/**
+	 * Register the quotable tweets block.
+	 *
+	 * @return void
+	 */
+	public function register_quotable_tweets_block() {
+		wp_register_script(
+			'quotable-tweets-block',
+			plugins_url( 'block/build/index.js', __FILE__ ),
+			array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-editor' ),
+			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/index.js' ),
+			true
+		);
+
+		wp_register_style(
+			'quotable-tweets-editor-style',
+			plugins_url( 'block/build/editor.css', __FILE__ ),
+			array( 'wp-edit-blocks' ),
+			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/main.css' )
+		);
+
+		wp_register_style(
+			'quotable-tweets-block',
+			plugins_url( 'block/build/style.css', __FILE__ ),
+			array(),
+			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/main.css' )
+		);
+
+		register_block_type(
+			'draftpress/quotable-tweets',
+			array(
+				'editor_script'   => 'quotable-tweets-block',
+				'editor_style'    => 'quotable-tweets-editor-style',
+				'style'           => 'quotable-tweets-block',
+				'render_callback' => array( $this, 'render_quotable_tweets_block' ),
+			)
+		);
+	}
+
+
+	/**
+	 * Render the quotable tweets block.
+	 *
+	 * @param array  $attributes The block attributes.
+	 * @param string $content    The block content.
+	 *
+	 * @return string The block HTML.
+	 */
+	public function render_quotable_tweets_block( $attributes, $content ) {
+		if ( ! is_singular() ) {
+			return '';
+		}
+
+		global $post;
+
+		// Default post link.
+		$post_link = wp_get_shortlink( $post->ID );
+		if ( ! $post_link ) {
+			$post_link = get_permalink( $post->ID );
+		}
+
+		// Bitly link shortening.
+		if ( ! empty( $attributes['bitlyAccessToken'] ) ) {
+
+			$response = wp_remote_get( 'https://api-ssl.bitly.com/v3/shorten?access_token=' . $attributes['bitlyAccessToken'] . '&longUrl=' . rawurlencode( $post_link ) . '&format=json' );
+
+			if ( ! is_wp_error( $response ) ) {
+				$body   = wp_remote_retrieve_body( $response );
+				$result = json_decode( $body );
+				if ( isset( $result->data->url ) ) {
+					$post_link = $result->data->url;
+				}
+			}
+		}
+
+		$post_title         = get_the_title( $post );
+		$twitter_intent_url = 'https://twitter.com/intent/tweet?text=' . rawurlencode( $post_title . ' ' . $post_link );
+
+		ob_start();
+		?>
+		<div class="wp-block-draftpress-quotable-tweets">
+			<div class="nnr-qt-container">
+				<div class="nnr-qt-title-container">
+					<span class="nnr-qt-icon-twitter" aria-hidden="true"></span>
+					<span class="nnr-qt-title"><?php echo esc_html( $attributes['title'] ); ?></span>
+				</div>
+				<div class="nnr-qt-text-container">
+					<p class="nnr-qt-post-title"><?php echo esc_html( $post_title ); ?></p>
+					<p class="nnr-qt-quote-container">
+						<span class="nnr-qt-quote dashicons dashicons-format-quote"></span>
+					</p>
+				</div>
+				<a class="nnr-qt-button" href="<?php echo esc_url( $twitter_intent_url ); ?>">
+					<?php echo esc_html( $attributes['buttonText'] ); ?>
+				</a>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**
@@ -188,14 +289,13 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 
 		global $post;
 
-		echo esc_attr( $args['before_widget'] );
+		// Escaping before_widget.
+		// @codingStandardsIgnoreLine
+		echo $args['before_widget'];
 
 		// Title.
 		if ( empty( $instance['title'] ) ) {
-			$instance['title'] = esc_html__(
-				'Share this article!',
-				'quotable-tweets'
-			);
+			$instance['title'] = esc_html__( 'Share this article!', 'quotable-tweets' );
 		}
 
 		// Bitly access token.
@@ -205,26 +305,10 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 		}
 
 		if ( ! empty( $instance['bitly_access_token'] ) ) {
-			$instance['title'] = esc_html__(
-				'Share this article!',
-				'quotable-tweets'
-			);
+			$instance['title'] = esc_html__( 'Share this article!', 'quotable-tweets' );
 
-			// Construct the URL with parameters and use rawurlencode.
-			$bitly_url = 'https://api-ssl.bitly.com/v3/shorten?'
-			. http_build_query(
-				array(
-					'access_token' => $instance['bitly_access_token'],
-					'longUrl'      => rawurlencode( $post_link ),
-					'format'       => 'json',
-				)
-			);
-
-			// Use wp_remote_get() to make an HTTP request.
-			$response = wp_remote_get( $bitly_url );
-
+			$response = wp_remote_get( 'https://api-ssl.bitly.com/v3/shorten?access_token=' . $instance['bitly_access_token'] . '&longUrl=' . rawurlencode( $post_link ) . '&format=json' );
 			if ( ! is_wp_error( $response ) ) {
-				// Parse the JSON response.
 				$body   = wp_remote_retrieve_body( $response );
 				$result = json_decode( $body );
 
@@ -234,58 +318,44 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 			}
 		}
 
-		// Set default button text if empty.
-		if ( empty( esc_attr( $instance['button_text'] ) ) ) {
+		// Button Text.
+		if ( empty( $instance['button_text'] ) ) {
 			$instance['button_text'] = esc_html__( 'Tweet', 'quotable-tweets' );
 		}
-		?>
-		<div class="<?php echo esc_attr( self::$prefix_dash ); ?>>container">
-			<div class="<?php echo esc_attr( self::$prefix_dash ); ?>title-container">
-				<span aria-hidden="true" 
-				class="<?php echo esc_attr( self::$prefix_dash ); ?>
-					icon-twitter">
-				</span>
-				<span class="<?php echo esc_attr( self::$prefix_dash ); ?>title">
-					<?php echo esc_attr( $instance['title'] ); ?>
-				</span>
 
+		// Escaping all outputs.
+		?>
+		<div class="<?php echo esc_attr( self::$prefix_dash ); ?>container">
+
+			<div class="<?php echo esc_attr( self::$prefix_dash ); ?>title-container">
+				<span aria-hidden="true" class="<?php echo esc_attr( self::$prefix_dash ); ?>icon-twitter"></span>
+				<span class="<?php echo esc_attr( self::$prefix_dash ); ?>title"><?php echo esc_html( $instance['title'] ); ?></span>
 			</div>
+
 			<div class="<?php echo esc_attr( self::$prefix_dash ); ?>text-container">
-				<p class="<?php echo esc_attr( self::$prefix_dash ); ?>post-title">  
-					<?php
-					echo esc_attr( $post->post_title );
-					?>
-				</p>
-				<?php
-				$class_name
-					= esc_attr( self::$prefix_dash ) . 'quote-container';
-				?>
-				<p class="<?php echo esc_attr( $class_name ); ?>quote-container">
-					<span class="<?php echo esc_attr( self::$prefix_dash ); ?>
-					quote dashicons dashicons-format-quote"></span>
+				<p class="<?php echo esc_attr( self::$prefix_dash ); ?>post-title"><?php echo esc_html( $post->post_title ); ?></p>
+				<p class="<?php echo esc_attr( self::$prefix_dash ); ?>quote-container">
+					<span class="<?php echo esc_attr( self::$prefix_dash ); ?>quote dashicons dashicons-format-quote"></span>
 				</p>
 			</div>
-			<?php
-			$a_href
-				= 'https://twitter.com/intent/tweet?text='
-			. $post->post_title . ' ' . $post_link;
-			?>
-			<a class="<?php echo esc_attr( self::$prefix_dash ); ?>button"
-			href="<?php echo esc_url( $a_href ); ?>">
-			<?php echo esc_attr( $instance['button_text'] ); ?>
+
+			<a class="<?php echo esc_attr( self::$prefix_dash ); ?>button" href="https://twitter.com/intent/tweet?text=<?php echo esc_attr( $post->post_title . ' ' . $post_link ); ?>">
+				<?php echo esc_html( $instance['button_text'] ); ?>
 			</a>
+
 		</div>
 		<?php
-		wp_enqueue_style(
-			self::$prefix . 'css',
-			plugins_url( 'quotable-tweets.css', __FILE__ ),
-			array(),
-			'1.0.0'
-		);
+
+		// Enqueue styles with version.
+		$version = filemtime( plugin_dir_path( __FILE__ ) . 'quotable-tweets.css' );
+		wp_enqueue_style( self::$prefix . 'css', plugins_url( 'quotable-tweets.css', __FILE__ ), array(), $version );
 		wp_enqueue_style( 'dashicons' );
 
-		echo esc_attr( $args['after_widget'] );
+		// Escaping after_widget.
+		// @codingStandardsIgnoreLine
+		echo $args['after_widget'];
 	}
+
 
 	/**
 	 * Back-end widget form.
