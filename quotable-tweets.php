@@ -188,14 +188,14 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 			'quotable-tweets-editor-style',
 			plugins_url( 'block/build/editor.css', __FILE__ ),
 			array( 'wp-edit-blocks' ),
-			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/main.css' )
+			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/editor.css' )
 		);
 
 		wp_register_style(
 			'quotable-tweets-block',
 			plugins_url( 'block/build/style.css', __FILE__ ),
 			array(),
-			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/main.css' )
+			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/style.css' )
 		);
 
 		register_block_type(
