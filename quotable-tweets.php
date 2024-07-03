@@ -63,6 +63,9 @@ add_action(
 	}
 );
 
+add_filter( 'widget_types_to_hide_from_legacy_widget_block', array( 'NNRobots_Quotable_Tweets', 'hide_quotable_tweets_widget' ) );
+
+
 /**
  * NNRobots_Quotable_Tweets main class
  *
@@ -157,7 +160,7 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 	 */
 	public function __construct() {
 		parent::__construct(
-			'quotable_tweets',
+			'quotable_tweets', // Base ID.
 			esc_html__( 'Quotable Tweets', 'quotable-tweets' ),
 			array(
 				'description' => esc_html__(
@@ -179,7 +182,7 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 		wp_register_script(
 			'quotable-tweets-block',
 			plugins_url( 'block/build/index.js', __FILE__ ),
-			array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-editor' ),
+			array( 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-block-editor' ),
 			filemtime( plugin_dir_path( __FILE__ ) . 'block/build/index.js' ),
 			true
 		);
@@ -269,6 +272,17 @@ class NNRobots_Quotable_Tweets extends WP_Widget {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Hide the widget from the block editor
+	 *
+	 * @param array $widget_types Array of widget types.
+	 * @return array
+	 */
+	public static function hide_quotable_tweets_widget( $widget_types ) {
+		$widget_types[] = 'quotable_tweets';
+		return $widget_types;
 	}
 
 	/**
